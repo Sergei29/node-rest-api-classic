@@ -61,3 +61,81 @@ For this project we'll follow a layers architecture in our codebase. Layers arch
 An important thing to keep in mind is that in these kinds of architectures, there's a defined communication flow between the layers that has to be followed for it to make sense.
 
 This means that a request first has to go through the first layer, then the second, then the third and so on. No request should skip layers because that would mess with the logic of the architecture and the benefits of organization and modularity it gives us.
+
+## Testing, How to Test a REST API with Supertest
+
+SuperTest is a JavaScript library that is used for testing HTTP servers or web applications that make HTTP requests. It provides a high-level abstraction for testing HTTP, allowing developers to send HTTP requests and make assertions about the responses received, making it easier to write automated tests for web applications.
+
+add these dependencies to `package.json`
+
+```json
+"scripts": {
+  "test": "jest"
+},
+"devDependencies": {
+    "@babel/core": "^7.21.4",
+    "@babel/preset-env": "^7.21.4",
+    "babel-jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "jest-babel": "^1.0.1",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3"
+  }
+```
+
+to `babel.config.cjs` add:
+
+```js
+module.exports = {
+  presets: [
+    [
+      "@babel/preset-env",
+      {
+        targets: {
+          node: "current",
+        },
+      },
+    ],
+  ],
+};
+```
+
+then lets write our first test, in the `routes/` add file `pets.test.js`:
+
+```js
+import supertest from "supertest"; // Import supertest
+import { app as server } from "../app"; // Import the server object
+
+const requestWithSupertest = supertest(server);
+
+describe('GET "/"', () => {
+  test('GET "/" returns all pets', async () => {
+    const res = await requestWithSupertest.get("/pets");
+    expect(res.status).toEqual(200);
+    expect(res.type).toEqual(expect.stringContaining("json"));
+    expect(res.body).toEqual([
+      {
+        id: 1,
+        name: "Rex",
+        type: "dog",
+        age: 3,
+        breed: "labrador",
+      },
+      {
+        id: 2,
+        name: "Fido",
+        type: "dog",
+        age: 1,
+        breed: "poodle",
+      },
+      {
+        id: 3,
+        name: "Mittens",
+        type: "cat",
+        age: 2,
+        breed: "tabby",
+      },
+    ]);
+  });
+});
+```
