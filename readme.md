@@ -139,3 +139,141 @@ describe('GET "/"', () => {
   });
 });
 ```
+
+## How to Document a REST API with Swagger
+
+Documenting and API generally means declaring which endpoints are available, what actions are performed by each endpoint, and the parameters and return values for each of them.
+
+This is useful not only to remember how our server works, but also for people who want to interact with our API.
+
+Swagger is a set of open-source tools that help developers build, document, and consume RESTful web services. It provides a user-friendly graphical interface for users to interact with an API and also generates client code for various programming languages to make API integration easier.
+
+### How to Implement Swagger
+
+Back in our server app, to implement Swagger we'll need two new dependencies. So run:
+
+- `npm i swagger-jsdoc`
+- `npm i swagger-ui-express`
+
+Next, modify the `app.js` file to look like this:
+
+```js
+import express from "express";
+import cors from "cors";
+import swaggerUI from "swagger-ui-express";
+import swaggerJSdoc from "swagger-jsdoc";
+
+import petRoutes from "./pets/routes/pets.routes.js";
+
+const app = express();
+const port = 3000;
+
+// swagger definition
+const swaggerSpec = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Pets API",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        url: `http://localhost:${PORT}`,
+      },
+    ],
+  },
+  apis: ["./routes/*.js"],
+};
+
+/* Global middlewares */
+app.use(cors());
+app.use(express.json());
+app.use(
+  "/api-docs",
+  swaggerUI.serve,
+  swaggerUI.setup(swaggerJSdoc(swaggerSpec))
+);
+
+/* Routes */
+app.use("/pets", petRoutes);
+
+/* Server setup */
+if (process.env.NODE_ENV !== "test") {
+  app.listen(port, () =>
+    console.log(`⚡️[server]: Server is running at https://localhost:${port}`)
+  );
+}
+
+export default app;
+```
+
+By now, if you open your browser and go to `http://localhost:3000/api-docs/` you should see this:
+
+![Swagger](./swagger.png)
+
+The cool thing about Swagger is it provides an out-of-the-box UI for our docs, and you can easily access it in the URL path declared in the config.
+
+Now let's write some actual documentation!
+
+Hop on to the `pets.routes.js` file and add to the code this, similar to each endpoint:
+
+```js
+import express from "express";
+import {
+  listPets,
+  getPet,
+  editPet,
+  addPet,
+  deletePet,
+} from "../controllers/pets.controllers.js";
+
+const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *     Pet:
+ *      type: object
+ *      properties:
+ *          id:
+ *              type: integer
+ *              description: Pet id
+ *          name:
+ *              type: string
+ *              description: Pet name
+ *          age:
+ *              type: integer
+ *              description: Pet age
+ *          type:
+ *              type: string
+ *              description: Pet type
+ *          breed:
+ *              type: string
+ *              description: Pet breed
+ *     example:
+ *          id: 1
+ *          name: Rexaurus
+ *          age: 3
+ *          breed: labrador
+ *          type: dog
+ */
+
+/**
+ * @swagger
+ * /pets:
+ *  get:
+ *     summary: Get all pets
+ *     description: Get all pets
+ *     responses:
+ *      200:
+ *         description: Success
+ *      500:
+ *         description: Internal Server Error
+ */
+router.get("/", listPets);
+```
+
+now you are going to see at `http://localhost:3000/api-docs/` :
+
+![Swagger ready](./swagger_ready.png)
